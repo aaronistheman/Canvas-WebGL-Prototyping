@@ -1,0 +1,3 @@
+-try drawing the things needed in game show fusion; e.g.:
+    --opening of a briefcase
+    --flipping over of a money bar
