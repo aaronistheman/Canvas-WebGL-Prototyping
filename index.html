@@ -15,7 +15,7 @@ function initBuffers(gl) {
     return triangleBuffers;
 }
 
-function drawStage(gl, triangleBuffers){
+function drawStage(gl, triangleBuffers, angle) {
     gl.clear();
     // set field of view at 45 degrees
     // set viewing range between 0.1 and 100.0 units away.
@@ -24,6 +24,8 @@ function drawStage(gl, triangleBuffers){
     
     // translate model-view matrix
     gl.translate(0, 0, -5);
+    // rotate model-view matrix about y-axis
+    gl.rotate(angle, 0, 1, 0);
     
     gl.pushPositionBuffer(triangleBuffers);
     gl.drawArrays(triangleBuffers);
@@ -33,7 +35,20 @@ window.onload = function(){
     var gl = new WebGL("myCanvas", "experimental-webgl");
     gl.setShaderProgram("BLUE_COLOR");
     var triangleBuffers = initBuffers(gl);
-    drawStage(gl, triangleBuffers);
+    var angle = 0;
+    
+    gl.setStage(function(){
+        // update angle
+        var angularVelocity = Math.PI / 2; // radians / second
+        var angleEachFrame = angularVelocity *
+            gl.getTimeInterval() / 1000;
+        angle += angleEachFrame;
+        
+        this.clear();
+        
+        drawStage(gl, triangleBuffers, angle);
+    });
+    gl.startAnimation();
 };
 
 </script>
@@ -41,7 +56,7 @@ window.onload = function(){
 </head>
 <body>
 
-<canvas id="myCanvas" width="578" height="250"
+<canvas id="myCanvas" width="600" height="250"
 			style="border:1px solid black;"></canvas>
 
 </body>
