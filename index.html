@@ -2,11 +2,12 @@
 <html>
 <head>
 
-<script src="js/glMatrix-1.0.1.min.js"></script>
-<script src="js/WebGL.js"></script>
+<script src="glMatrix-1.0.1.min.js"></script>
+<script src="WebGL.js"></script>
 <script>
+
 function initBuffers(gl){
-    var cubeBuffers = {}
+    var cubeBuffers = {};
     cubeBuffers.positionBuffer = gl.createArrayBuffer([
         // Front face
         -1, -1, 1,
@@ -45,25 +46,81 @@ function initBuffers(gl){
         -1, 1, -1
     ]);
     
-    // build color Vertices
-    var colors = [
-        [1, 0, 1, 1], // Front face - Pink
-        [0, 1, 0, 1], // Back face - Green
-        [0, 0, 1, 1], // Top face - Blue
-        [0, 1, 1, 1], // Bottom face - Turquoise
-        [1, 1, 0, 1], // Right face - Yellow
-        [1, 0, 0, 1] // Left face - Red
-    ];
+    cubeBuffers.normalBuffer = gl.createArrayBuffer([
+        // Front face
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        
+        // Back face
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        
+        // Top face
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        
+        // Bottom face
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        
+        // Right face
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        
+        // Left face
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0
+    ]);
     
-    var colorVertices = [];
-    for (var n in colors) {
-        var color = colors[n];
-        for (var i=0; i < 4; i++) {
-            colorVertices = colorVertices.concat(color);
-        }
-    }
-    
-    cubeBuffers.colorBuffer = gl.createArrayBuffer(colorVertices);
+    cubeBuffers.textureBuffer = gl.createArrayBuffer([
+        // Front face
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1,
+        
+        // Back face
+        1, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+        
+        // Top face
+        0, 1,
+        0, 0,
+        1, 0,
+        1, 1,
+        
+        // Bottom face
+        1, 1,
+        0, 1,
+        0, 0,
+        1, 0,
+        
+        // Right face
+        1, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+        
+        // Left face
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1
+    ]);
     
     cubeBuffers.indexBuffer = gl.createElementArrayBuffer([
         0, 1, 2, 0, 2, 3, // Front face
@@ -77,30 +134,35 @@ function initBuffers(gl){
     return cubeBuffers;
 }
 
-function stage(gl, cubeBuffers, angle){
+function stage(gl, cubeBuffers, crateTexture, angle){
     // set field of view at 45 degrees
-    // set viewing range between 0.1 and 100.0 units away.
-    gl.perspective(45, 0.1, 100);
+    // set viewing range between 0.1 and 100 units away.
+    gl.perspective(45, 0.1, 100.0);
     gl.identity();
     
     // translate model-view matrix
-    gl.translate(0, 0, -5);
+    gl.translate(0, 0.0, -5);
     // rotate model-view matrix about x-axis (tilt box downwards)
     gl.rotate(Math.PI * 0.15, 1, 0, 0);
     // rotate model-view matrix about y-axis
     gl.rotate(angle, 0, 1, 0);
     
+    // enable lighting
+    gl.enableLighting();
+    gl.setAmbientLighting(0.5, 0.5, 0.5);
+    gl.setDirectionalLighting(-0.25, -0.25, -1, 0.8, 0.8, 0.8);
+    
     gl.pushPositionBuffer(cubeBuffers);
-    gl.pushColorBuffer(cubeBuffers);
+    gl.pushNormalBuffer(cubeBuffers);
+    gl.pushTextureBuffer(cubeBuffers, crateTexture);
     gl.pushIndexBuffer(cubeBuffers);
     gl.drawElements(cubeBuffers);
 }
 
-window.onload = function(){
-    var gl = new WebGL("myCanvas", "experimental-webgl");
-    gl.setShaderProgram("VARYING_COLOR");
+function init(gl, crateTexture){
     var cubeBuffers = initBuffers(gl);
     var angle = 0;
+    gl.initTexture(crateTexture);
     gl.setStage(function(){
         // update angle
         var angularVelocity = Math.PI / 4; // radians / second
@@ -108,9 +170,25 @@ window.onload = function(){
             this.getTimeInterval() / 1000;
         angle += angleEachFrame;
         this.clear();
-        stage(this, cubeBuffers, angle);
+        stage(this, cubeBuffers, crateTexture, angle);
     });
     gl.startAnimation();
+}
+
+function loadTexture(gl){
+    var crateTexture = gl.getContext().createTexture();
+    crateTexture.image = new Image();
+    
+    crateTexture.image.onload = function(){
+        init(gl, crateTexture);
+    };
+    crateTexture.image.src = "crate.jpg";
+}
+
+window.onload = function(){
+    var gl = new WebGL("myCanvas", "experimental-webgl");
+    gl.setShaderProgram("TEXTURE_DIRECTIONAL_LIGHTING");
+    loadTexture(gl);
 };
 
 </script>
