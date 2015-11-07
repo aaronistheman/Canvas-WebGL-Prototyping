@@ -1,0 +1,6 @@
+-try drawing the things needed in game show fusion; e.g.:
+    --opening of a briefcase
+    --flipping over of a money bar
+-test ideas for other games; e.g.:
+    --using a tile map to generate a maze of boxes and walls
+        --do not allow movement into any boxes or walls
